@@ -14,8 +14,8 @@ import org.json.simple.parser.ParseException;
 
 public class Preprocess2 {
 	public static void main(String[] args) {
-		String inDir = args[0];
-		String outFile = args[1];
+		//String inDir = args[0];
+		//String outFile = args[1];
 
 		String[] users = {
 				"com:mdsol:users:52344b6e-e6d5-4ec2-b83d-bbc64725d189",
@@ -36,17 +36,10 @@ public class Preprocess2 {
 		 * "com:mdsol:devices:e4eb4227-c13a-508d-8949-c1a42eb34692" };
 		 */
 
-		System.out.println(inDir + ' ' + outFile);
-
-		// HashMap<String, HashMap<String, HashMap<String, HashMap<String,
-		// JSONArray>>>> users =
-		// new HashMap<String, HashMap<String, HashMap<String, HashMap<String,
-		// JSONArray>>>>();
-
-		HashMap<String, HashMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, HashMap<String, HashMap<String, JSONArray>>>();
-		HashMap<String, HashMap<String, JSONArray>> times;
+		System.out.println(args[0] + ' ' + args[1]);
+		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(7);
+		TreeMap<String, HashMap<String, JSONArray>> times;
 		HashMap<String, JSONArray> categories;
-		JSONArray values;
 
 		JSONParser parser = new JSONParser();
 		
@@ -58,18 +51,17 @@ public class Preprocess2 {
 		Set<String> keysetuser, keysetdevice, keysettime, keysetcategory;
 
 		try {
-
-			File folder = new File(inDir);
+			System.out.println(args[0]);
+			File folder = new File(args[0]);
 			String[] partname = folder.list();
 
-			System.out.println(partname[0]);
+			System.out.println(partname.length);
 
-			for (int k = 0; k < 1; k++) {
-				String curFile = outFile+k;
-				File f = new File(curFile);
+			for (int k = 5; k < 6; k++) {
+				File f = new File(args[1]+k);
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 				for (int i = 0; i < partname.length; i++) {
-					currentfile = inDir + partname[i];
+					currentfile = args[0] + partname[i];
 					System.out.println("Start "+ currentfile);
 					if (partname[i].equals(".DS_Store")) {
 						continue;
@@ -86,7 +78,7 @@ public class Preprocess2 {
 								if (!devices.containsKey(device)) {
 									devices.put(
 											device,
-											new HashMap<String, HashMap<String, JSONArray>>());
+											new TreeMap<String, HashMap<String, JSONArray>>());
 								}
 
 								times = devices.get(device);
@@ -98,7 +90,7 @@ public class Preprocess2 {
 									if (!times.containsKey(time)) {
 										times.put(
 												time,
-												new HashMap<String, JSONArray>());
+												new HashMap<String, JSONArray>(4));
 									}
 									categories = times.get(time);
 									jsonObject4 = (JSONObject) jsonObject3
@@ -109,10 +101,13 @@ public class Preprocess2 {
 											categories.put(category,
 													new JSONArray());
 										}
-										values = categories.get(category);
-										jsonObject5 = (JSONArray) jsonObject4
-												.get(category);
-										values.addAll(jsonObject5);
+										//values = categories.get(category);
+										
+										jsonObject5 = (JSONArray) jsonObject4.get(category);
+										Object tmp = jsonObject5.get(jsonObject5.size() - 1);
+										JSONArray lastone = new JSONArray();
+										lastone.add(tmp);
+										categories.put(category, lastone);
 									}
 								}
 							}
@@ -121,7 +116,8 @@ public class Preprocess2 {
 					System.out.println("End "+ currentfile);
 				}
 				System.out.println("write");
-				bw.write(JSONValue.toJSONString(devices));
+				
+				bw.write(devices.toString());
 				bw.close();
 				System.out.println("done");
 			}
