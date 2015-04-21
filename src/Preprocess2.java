@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-
+import java.util.concurrent.ConcurrentHashMap;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONValue;
@@ -37,9 +37,9 @@ public class Preprocess2 {
 		 */
 
 		System.out.println(args[0] + ' ' + args[1]);
-		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(1);
-		TreeMap<String, HashMap<String, JSONArray>> times;
-		HashMap<String, JSONArray> categories;
+		ConcurrentHashMap<String, TreeMap<String, TreeMap<String, JSONArray>>> devices = new ConcurrentHashMap<String, TreeMap<String, TreeMap<String, JSONArray>>>(1);
+		TreeMap<String, TreeMap<String, JSONArray>> times;
+		TreeMap<String, JSONArray> categories;
 
 		JSONParser parser = new JSONParser();
 		
@@ -78,7 +78,7 @@ public class Preprocess2 {
 								if (!devices.containsKey(device)) {
 									devices.put(
 											device,
-											new TreeMap<String, HashMap<String, JSONArray>>());
+											new TreeMap<String, TreeMap<String, JSONArray>>());
 								}
 
 								times = devices.get(device);
@@ -93,7 +93,7 @@ public class Preprocess2 {
 									if (!times.containsKey(time)) {
 										times.put(
 												time,
-												new HashMap<String, JSONArray>(4));
+												new TreeMap<String, JSONArray>());
 									}
 									categories = times.get(time);
 									jsonObject4 = (JSONObject) jsonObject3
