@@ -37,7 +37,7 @@ public class Preprocess2 {
 		 */
 
 		System.out.println(args[0] + ' ' + args[1]);
-		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(7);
+		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(2);
 		TreeMap<String, HashMap<String, JSONArray>> times;
 		HashMap<String, JSONArray> categories;
 
@@ -57,7 +57,7 @@ public class Preprocess2 {
 
 			System.out.println(partname.length);
 
-			for (int k = 5; k < 6; k++) {
+			for (int k = 6; k < 7; k++) {
 				File f = new File(args[1]+k);
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 				for (int i = 0; i < partname.length; i++) {
@@ -74,7 +74,7 @@ public class Preprocess2 {
 							jsonObject2 = (JSONObject) jsonObject1.get(user);
 							keysetdevice = jsonObject2.keySet();
 							for (String device : keysetdevice) {
-
+								device="\""+device+"\"";
 								if (!devices.containsKey(device)) {
 									devices.put(
 											device,
@@ -84,9 +84,12 @@ public class Preprocess2 {
 								times = devices.get(device);
 
 								jsonObject3 = (JSONObject) jsonObject2
-										.get(device);
+										.get(device.substring(1, device.length() - 1));
 								keysettime = jsonObject3.keySet();
 								for (String time : keysettime) {
+									if(time.equals("NaN"))
+										System.out.println(time);
+									time = "\""+time+"\"";
 									if (!times.containsKey(time)) {
 										times.put(
 												time,
@@ -94,16 +97,17 @@ public class Preprocess2 {
 									}
 									categories = times.get(time);
 									jsonObject4 = (JSONObject) jsonObject3
-											.get(time);
+											.get(time.substring(1, time.length() - 1));
 									keysetcategory = jsonObject4.keySet();
 									for (String category : keysetcategory) {
+										category = "\""+category+"\"";
 										if (!categories.containsKey(category)) {
 											categories.put(category,
 													new JSONArray());
 										}
 										//values = categories.get(category);
 										
-										jsonObject5 = (JSONArray) jsonObject4.get(category);
+										jsonObject5 = (JSONArray) jsonObject4.get(category.substring(1, category.length() - 1));
 										Object tmp = jsonObject5.get(jsonObject5.size() - 1);
 										JSONArray lastone = new JSONArray();
 										lastone.add(tmp);
