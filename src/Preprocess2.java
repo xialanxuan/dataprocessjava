@@ -37,7 +37,7 @@ public class Preprocess2 {
 		 */
 
 		System.out.println(args[0] + ' ' + args[1]);
-		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(2);
+		HashMap<String, TreeMap<String, HashMap<String, JSONArray>>> devices = new HashMap<String, TreeMap<String, HashMap<String, JSONArray>>>(1);
 		TreeMap<String, HashMap<String, JSONArray>> times;
 		HashMap<String, JSONArray> categories;
 
@@ -57,7 +57,7 @@ public class Preprocess2 {
 
 			System.out.println(partname.length);
 
-			for (int k = 6; k < 7; k++) {
+			for (int k = 5; k < 6; k++) {
 				File f = new File(args[1]+k);
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 				for (int i = 0; i < partname.length; i++) {
