@@ -1,21 +1,24 @@
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import org.json.simple.JSONObject;
+import java.util.Set;
+
+import org.bson.Document;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONValue;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 public class Preprocess2 {
 	public static void main(String[] args) {
-		//String inDir = args[0];
-		//String outFile = args[1];
+		// String inDir = args[0];
+		// String outFile = args[1];
+
+		MongoClient mongoClient = new MongoClient();
+
+		MongoDatabase db = mongoClient.getDatabase("test");
 
 		String[] users = {
 				"com:mdsol:users:52344b6e-e6d5-4ec2-b83d-bbc64725d189",
@@ -37,12 +40,8 @@ public class Preprocess2 {
 		 */
 
 		System.out.println(args[0] + ' ' + args[1]);
-		ConcurrentHashMap<String, TreeMap<String, TreeMap<String, JSONArray>>> devices = new ConcurrentHashMap<String, TreeMap<String, TreeMap<String, JSONArray>>>(1);
-		TreeMap<String, TreeMap<String, JSONArray>> times;
-		TreeMap<String, JSONArray> categories;
 
 		JSONParser parser = new JSONParser();
-		
 
 		String currentfile;
 		Object obj;
@@ -57,74 +56,67 @@ public class Preprocess2 {
 
 			System.out.println(partname.length);
 
-			for (int k = 5; k < 6; k++) {
-				File f = new File(args[1]+k);
-				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-				for (int i = 0; i < partname.length; i++) {
-					currentfile = args[0] + partname[i];
-					System.out.println("Start "+ currentfile);
-					if (partname[i].equals(".DS_Store")) {
-						continue;
-					}
-					obj = parser.parse(new FileReader(currentfile));
-					jsonObject1 = (JSONObject) obj;
-					keysetuser = jsonObject1.keySet();
-					for (String user : keysetuser) {
-						if (user.equals(users[k])) {
-							jsonObject2 = (JSONObject) jsonObject1.get(user);
-							keysetdevice = jsonObject2.keySet();
-							for (String device : keysetdevice) {
-								device="\""+device+"\"";
-								if (!devices.containsKey(device)) {
-									devices.put(
-											device,
-											new TreeMap<String, TreeMap<String, JSONArray>>());
-								}
+			for (int i = 0; i < partname.length; i++) {
+				currentfile = args[0] + partname[i];
+				System.out.println("Start " + currentfile + "...");
+				if (partname[i].equals(".DS_Store")) {
+					continue;
+				}
+				obj = parser.parse(new FileReader(currentfile));
+				jsonObject1 = (JSONObject) obj;
+				keysetuser = jsonObject1.keySet();
+				for (String user : keysetuser) {
 
-								times = devices.get(device);
+					MongoCollection<Document> userCollection = db
+							.getCollection(user);
 
-								jsonObject3 = (JSONObject) jsonObject2
-										.get(device.substring(1, device.length() - 1));
-								keysettime = jsonObject3.keySet();
-								for (String time : keysettime) {
-									if(time.equals("NaN"))
-										System.out.println(time);
-									time = "\""+time+"\"";
-									if (!times.containsKey(time)) {
-										times.put(
-												time,
-												new TreeMap<String, JSONArray>());
-									}
-									categories = times.get(time);
-									jsonObject4 = (JSONObject) jsonObject3
-											.get(time.substring(1, time.length() - 1));
-									keysetcategory = jsonObject4.keySet();
-									for (String category : keysetcategory) {
-										category = "\""+category+"\"";
-										if (!categories.containsKey(category)) {
-											categories.put(category,
-													new JSONArray());
-										}
-										//values = categories.get(category);
-										
-										jsonObject5 = (JSONArray) jsonObject4.get(category.substring(1, category.length() - 1));
-										Object tmp = jsonObject5.get(jsonObject5.size() - 1);
-										JSONArray lastone = new JSONArray();
-										lastone.add(tmp);
-										categories.put(category, lastone);
-									}
-								}
+					jsonObject2 = (JSONObject) jsonObject1.get(user);
+					keysetdevice = jsonObject2.keySet();
+
+					for (String device : keysetdevice) {
+
+						jsonObject3 = (JSONObject) jsonObject2.get(device);
+						keysettime = jsonObject3.keySet();
+						for (String time : keysettime) {
+							if (time.equals("NaN")) {
+								System.out.println(time);
+								continue;
 							}
+
+							if (userCollection.count(new Document("deviceId",
+									device).append("timeStamp", time)) == 0) {
+								userCollection.insertOne(new Document(
+										"deviceId", device).append("timeStamp",
+										time).append("categories",
+										new Document()));
+							}
+
+							jsonObject4 = (JSONObject) jsonObject3.get(time);
+							keysetcategory = jsonObject4.keySet();
+
+							for (String category : keysetcategory) {
+
+								jsonObject5 = (JSONArray) jsonObject4
+										.get(category);
+								Object tmp = jsonObject5
+										.get(jsonObject5.size() - 1);
+
+								userCollection.updateOne(new Document(
+										"deviceId", device).append("timeStamp",
+										time), new Document("$set",
+										new Document("categories." + category,
+												tmp.toString())));
+
+							}
+
 						}
 					}
-					System.out.println("End "+ currentfile);
 				}
-				System.out.println("write");
 				
-				bw.write(devices.toString());
-				bw.close();
 				System.out.println("done");
 			}
+
+			
 		}
 
 		catch (Exception e) {
