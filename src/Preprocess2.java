@@ -12,6 +12,11 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 public class Preprocess2 {
+
+	static final String F_DEVICE_ID = "deviceId";
+	static final String F_TIME_STAMP = "timeStamp";
+	static final String F_CATEGORIES = "categories";
+
 	public static void main(String[] args) {
 		// String inDir = args[0];
 		// String outFile = args[1];
@@ -20,14 +25,14 @@ public class Preprocess2 {
 
 		MongoDatabase db = mongoClient.getDatabase("test");
 
-		String[] users = {
+		/*String[] users = {
 				"com:mdsol:users:52344b6e-e6d5-4ec2-b83d-bbc64725d189",
 				"com:mdsol:users:foo-bar",
 				"com:mdsol:users:120ac13a-1fd3-4910-8aa9-eccee6a12643",
 				"com:mdsol:users:ae3292f0-08ca-4a57-ae99-a1a7a36988c0",
 				"com:mdsol:users:023e65de-a6d0-45eb-ae9e-c17adad47f45",
 				"com:mdsol:users:53cede99-078e-4a05-b04a-39d3cd51f83a",
-				"com:mdsol:users:98fc405a-7502-41ad-bd9c-bceecae56d57" };
+				"com:mdsol:users:98fc405a-7502-41ad-bd9c-bceecae56d57" };*/
 		/*
 		 * String[] devices = {
 		 * "com:mdsol:devices:07ff5774-e0ef-58ea-87ee-6c3727c3a3da",
@@ -67,13 +72,15 @@ public class Preprocess2 {
 				keysetuser = jsonObject1.keySet();
 				for (String user : keysetuser) {
 
-					MongoCollection<Document> userCollection = db
-							.getCollection(user);
-
 					jsonObject2 = (JSONObject) jsonObject1.get(user);
 					keysetdevice = jsonObject2.keySet();
 
 					for (String device : keysetdevice) {
+
+						MongoCollection<Document> collection = db
+								.getCollection(user + "/" + device);
+
+						collection.createIndex(new Document(F_TIME_STAMP, 1));
 
 						jsonObject3 = (JSONObject) jsonObject2.get(device);
 						keysettime = jsonObject3.keySet();
@@ -82,12 +89,13 @@ public class Preprocess2 {
 								System.out.println(time);
 								continue;
 							}
+							
+							Long timeLong = Long.parseLong(time);
 
-							if (userCollection.count(new Document("deviceId",
-									device).append("timeStamp", time)) == 0) {
-								userCollection.insertOne(new Document(
-										"deviceId", device).append("timeStamp",
-										time).append("categories",
+							if (collection.count(new Document(F_TIME_STAMP,
+									timeLong)) == 0) {
+								collection.insertOne(new Document(F_TIME_STAMP,
+										timeLong).append(F_CATEGORIES,
 										new Document()));
 							}
 
@@ -101,22 +109,20 @@ public class Preprocess2 {
 								Object tmp = jsonObject5
 										.get(jsonObject5.size() - 1);
 
-								userCollection.updateOne(new Document(
-										"deviceId", device).append("timeStamp",
-										time), new Document("$set",
-										new Document("categories." + category,
-												tmp.toString())));
+								collection.updateOne(new Document(F_TIME_STAMP,
+										timeLong), new Document("$set",
+										new Document(F_CATEGORIES + "."
+												+ category, tmp.toString())));
 
 							}
 
 						}
 					}
 				}
-				
+
 				System.out.println("done");
 			}
 
-			
 		}
 
 		catch (Exception e) {
