@@ -11,6 +11,7 @@ For each user,
 We gather time stamps for each device and store categories in the time stamp. 
 The schema for each document is the following:
 
+```
 {
     timeStamp: integer
     categories: {
@@ -19,6 +20,7 @@ The schema for each document is the following:
         ...
     }
 }
+```
 
 Then we use MongoDB to store data.
 
