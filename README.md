@@ -9,6 +9,16 @@ We use java to preprocess all the data parts for each user.
 
 For each user, 
 We gather time stamps for each device and store categories in the time stamp. 
+The schema for each document is the following:
+
+{
+    timeStamp: integer
+    categories: {
+        RawHeartValue: string
+        BodyTemp: string
+        ...
+    }
+}
 
 Then we use MongoDB to store data.
 
